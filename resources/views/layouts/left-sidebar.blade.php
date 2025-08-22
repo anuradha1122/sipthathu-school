@@ -17,6 +17,12 @@
             <i data-lucide="user" class="w-5 h-5"></i>
             <span>SLTS</span>
         </x-nav-link-left>
+
+        <x-nav-link-left :href="route('principal.dashboard')" :active="request()->routeIs('principal.dashboard')" class="w-full ">
+            <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+            <span>SLPS</span>
+        </x-nav-link-left>
+
         <x-nav-link-left :href="route('school.dashboard')" :active="request()->routeIs('school.dashboard')" class="w-full ">
             <i data-lucide="home" class="w-5 h-5"></i>
             <span>School</span>

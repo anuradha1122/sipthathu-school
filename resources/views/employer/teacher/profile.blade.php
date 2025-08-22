@@ -33,24 +33,32 @@
                             <div class="md:w-3/4 p-6">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ $teacher->nameWithInitials }}
+                                        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ $teacher->nameWithInitials.' ['.$teacher->nic.']' }}
                                         </h1>
-                                        <p class="text-indigo-600 dark:text-indigo-400 font-semibold">NIC Number: {{ $teacher->nic }}</p>
+                                        <p class="text-indigo-600 dark:text-indigo-400 font-semibold">Position: {{ $currentAppointment->position }}</p>
                                         </p>
                                     </div>
                                     <div class="flex space-x-2">
-                                        <button
-                                            class="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 p-2 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800">
-                                            <i data-lucide="mail"></i>
-                                        </button>
-                                        <button
+                                        <a href="{{ route('teacher.profileedit', [
+                                                'id' => $teacher->cryptedId,
+                                                'category' => 'position'
+                                            ]) }}"
+                                        class="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 p-2 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800 inline-flex items-center justify-center">
+                                            <i data-lucide="edit"></i>
+                                        </a>
+
+                                        {{-- <button
                                             class="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 p-2 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800">
                                             <i data-lucide="phone-call"></i>
-                                        </button>
+                                        </button> --}}
                                     </div>
                                 </div>
 
                                 <div class="mt-4">
+                                    <div class="flex items-center text-gray-600 dark:text-gray-300 mb-2 gap-2">
+                                        <i data-lucide="user"></i>
+                                        <span>Full Name: {{ $teacher->name }}</span>
+                                    </div>
                                     <div class="flex items-center text-gray-600 dark:text-gray-300 mb-2 gap-2">
                                         <i data-lucide="calendar-days"></i>
                                         <span>Date of Birth: {{ \Carbon\Carbon::parse($teacher->birthDay)->format('F j, Y') }}</span>
@@ -423,54 +431,200 @@
                                     </h3>
 
                                     <ul class="space-y-3">
-                                        @forelse($educationQualifications ?? [] as $qualification)
+
+                                        @forelse($currentServiceRanks ?? [] as $rank)
                                             <li class="flex items-start">
                                                 <!-- Left Icon -->
                                                 <div class="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-full mr-3">
-                                                    <i data-lucide="award" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
+                                                    <i data-lucide="medal" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
                                                 </div>
 
                                                 <!-- Right Content -->
                                                 <div>
                                                     <h4 class="font-medium text-gray-800 dark:text-gray-100">
-                                                        {{ $qualification->name ?? 'Not Available' }}
+                                                        {{ $rank['rank'] ?? 'Not Available' }}
                                                     </h4>
                                                     <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                                        <strong>Effective Date:</strong> {{ $qualification->effectiveDate ?? 'Not Available' }}
+                                                        <strong>Effective Date:</strong> {{ $rank['rankedDate'] ?? 'Not Available' }}
                                                     </p>
                                                 </div>
                                             </li>
                                         @empty
-                                            <li class="text-gray-500 dark:text-gray-400">No education qualifications available.</li>
+                                            <li class="text-gray-500 dark:text-gray-400">No Ranks available.</li>
                                         @endforelse
                                     </ul>
                                 </div>
                                 <div>
                                     <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
                                         <i class="fas fa-graduation-cap text-indigo-600 dark:text-indigo-400 mr-2"></i>
-                                        Professional Qualifications
+                                        Service Infos
                                     </h3>
 
                                     <ul class="space-y-3">
-                                        @forelse($professionalQualifications ?? [] as $qualification)
+                                        @forelse($currentService ?? [] as $service)
                                             <li class="flex items-start">
                                                 <!-- Left Icon -->
-                                                <div class="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-full mr-3">
-                                                    <i data-lucide="briefcase" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
+                                                <div class="bg-green-100 dark:bg-green-900 p-2 rounded-full mr-3">
+                                                    <i data-lucide="check" class="text-green-600 dark:text-green-300 text-xs"></i>
                                                 </div>
 
                                                 <!-- Right Content -->
                                                 <div>
                                                     <h4 class="font-medium text-gray-800 dark:text-gray-100">
-                                                        {{ $qualification->name ?? 'Not Available' }}
+                                                        {{ $service['serviceName'] ?? 'Not Available' }}
                                                     </h4>
                                                     <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                                        <strong>Effective Date:</strong> {{ $qualification->effectiveDate ?? 'Not Available' }}
+                                                        <strong>Effective Date:</strong> {{ $service['appointedDate'] ?? 'Not Available' }}
                                                     </p>
                                                 </div>
                                             </li>
                                         @empty
-                                            <li class="text-gray-500 dark:text-gray-400">No professional qualifications available.</li>
+                                            <li class="text-gray-500 dark:text-gray-400">No current Service available.</li>
+                                        @endforelse
+
+                                        @forelse($previousServices ?? [] as $service)
+                                            <li class="flex items-start">
+                                                <!-- Left Icon -->
+                                                <div class="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-full mr-3">
+                                                    <i data-lucide="badge" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
+                                                </div>
+
+                                                <!-- Right Content -->
+                                                <div>
+                                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">
+                                                        {{ $service['serviceName'] ?? 'Not Available' }}
+                                                    </h4>
+                                                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                                                        <strong>Effective Date:</strong> {{ $service['servicePeriod'] ?? 'Not Available' }}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        @empty
+                                            <li class="text-gray-500 dark:text-gray-400">No Previous Service available.</li>
+                                        @endforelse
+                                    </ul>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="border-t border-gray-200 dark:border-gray-700"></div>
+
+                        <!-- Appointment Details -->
+                        <div class="p-6">
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center justify-between">
+                                        <!-- Left side (icon + title) -->
+                                        <span class="flex items-center">
+                                            <i class="fas fa-graduation-cap text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                                            Appointment Infos
+                                        </span>
+
+
+                                    </h3>
+
+                                    <ul class="space-y-3">
+                                        @forelse($categorizedAppointments['currentAppointment'] as $ca)
+                                            <li class="flex items-start">
+                                                <!-- Left Icon -->
+                                                <div class="bg-green-100 dark:bg-green-900 p-2 rounded-full mr-3">
+                                                    <i data-lucide="check" class="text-green-600 dark:text-green-300 text-xs"></i>
+                                                </div>
+
+                                                <!-- Right Content -->
+                                                <div>
+                                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">
+                                                        {{ $ca->workPlaceName ?? 'Not Available' }}
+                                                    </h4>
+                                                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                                                        <strong>Appointed Date:</strong> {{ $ca->appointedDate ?? 'Not Available' }}
+                                                    </p>
+                                                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                                                        <strong>Current Position:</strong> {{ $currentAppointment->position ?? 'Not Available' }}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        @empty
+                                            <li class="text-gray-500 dark:text-gray-400">No current Appointment available.</li>
+                                        @endforelse
+
+                                        @forelse($categorizedAppointments['previousAppointment'] as $pa)
+                                            <li class="flex items-start">
+                                                <!-- Left Icon -->
+                                                <div class="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-full mr-3">
+                                                    <i data-lucide="calendar" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
+                                                </div>
+
+                                                <!-- Right Content -->
+                                                <div>
+                                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">
+                                                        {{ $pa->workPlaceName ?? 'Not Available' }}
+                                                    </h4>
+                                                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                                                        <strong>Appointment Period:</strong>
+                                                        {{ $pa->appointedDate ? \Carbon\Carbon::parse($pa->appointedDate)->format('Y-m-d') : 'Not Available' }}
+                                                        to
+                                                        {{ $pa->releasedDate ? \Carbon\Carbon::parse($pa->releasedDate)->format('Y-m-d') : 'Present' }}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        @empty
+                                            <li class="text-gray-500 dark:text-gray-400">No current Appointment available.</li>
+                                        @endforelse
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
+                                        <i class="fas fa-graduation-cap text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                                        Attachment Infos
+                                    </h3>
+
+                                    <ul class="space-y-3">
+                                        @forelse($categorizedAppointments['currentAttachedAppointment'] as $caa)
+                                            <li class="flex items-start">
+                                                <!-- Left Icon -->
+                                                <div class="bg-green-100 dark:bg-green-900 p-2 rounded-full mr-3">
+                                                    <i data-lucide="check" class="text-green-600 dark:text-green-300 text-xs"></i>
+                                                </div>
+
+                                                <!-- Right Content -->
+                                                <div>
+                                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">
+                                                        {{ $caa->workPlaceName ?? 'Not Available' }}
+                                                    </h4>
+                                                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                                                        <strong>Appointed Date:</strong> {{ $caa->appointedDate ?? 'Not Available' }}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        @empty
+                                            <li class="text-gray-500 dark:text-gray-400">No current Attached Appointment available.</li>
+                                        @endforelse
+
+                                        @forelse($categorizedAppointments['previousAttachedAppointment'] as $paa)
+                                            <li class="flex items-start">
+                                                <!-- Left Icon -->
+                                                <div class="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-full mr-3">
+                                                    <i data-lucide="calendar" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
+                                                </div>
+
+                                                <!-- Right Content -->
+                                                <div>
+                                                    <h4 class="font-medium text-gray-800 dark:text-gray-100">
+                                                        {{ $paa->workPlaceName ?? 'Not Available' }}
+                                                    </h4>
+                                                    <p class="text-gray-600 dark:text-gray-400 text-sm">
+                                                        <strong>Appointment Period:</strong>
+                                                        {{ $paa->appointedDate ? \Carbon\Carbon::parse($paa->appointedDate)->format('Y-m-d') : 'Not Available' }}
+                                                        to
+                                                        {{ $paa->releasedDate ? \Carbon\Carbon::parse($paa->releasedDate)->format('Y-m-d') : 'Present' }}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        @empty
+                                            <li class="text-gray-500 dark:text-gray-400">No previous Attached Appointment available.</li>
                                         @endforelse
                                     </ul>
                                 </div>
@@ -483,6 +637,14 @@
                         <!-- Contact Button -->
                         <div class="mt-8 border-t border-gray-200 dark:border-gray-700">
                             <div class="flex justify-end items-center p-6">
+                                <a href="{{ route('teacher.profileedit', [
+                                    'id' => $teacher->cryptedId,
+                                    'category' => 'password'
+                                    ]) }}"
+                                    class="bg-red-600 hover:bg-red-700 text-white dark:text-gray-100 font-bold py-3 px-8 rounded-full transition duration-300 inline-block text-center">
+                                     Reset Password
+                                </a>
+
                                 <button
                                     class="bg-indigo-600 hover:bg-indigo-700 text-white dark:text-gray-100 font-bold py-3 px-8 rounded-full transition duration-300">
                                     Download Profile

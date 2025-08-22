@@ -10,6 +10,7 @@ use App\Http\Controllers\NewAndUpdatesController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\PrincipalController;
 use App\Http\Controllers\SchoolController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,7 +32,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/teacher/profile', [TeacherController::class, 'profile'])->name('teacher.profile');
+
     Route::get('/teacher/transfer-application', [TeacherController::class, 'transferApplication'])->name('teacher.transfer-application');
     Route::get('/teacher/transfer-application-status', [TeacherController::class, 'transferApplicationStatus'])->name('teacher.transfer-application-status');
 
@@ -43,9 +44,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/teacher/register', [TeacherController::class, 'store'])->name('teacher.store');
     Route::get('/teacher/search', [TeacherController::class, 'search'])->name('teacher.search');
 
-    //Route::get('/teacher/profile', [TeacherController::class, 'profile'])->name('teacher.profile');
+    Route::get('/teacher/profile', [TeacherController::class, 'profile'])->name('teacher.profile');
     Route::get('/teacher/profileedit', [TeacherController::class, 'profileedit'])->name('teacher.profileedit');
     Route::post('/teacher/profileupdate', [TeacherController::class, 'profileupdate'])->name('teacher.profileupdate');
+
+    Route::get('/teacher/transfer-application', [TeacherController::class, 'transferApplication'])->name('teacher.transfer-application');
+    Route::get('/teacher/transfer-application-status', [TeacherController::class, 'transferApplicationStatus'])->name('teacher.transfer-application-status');
+
+    /*principal Section */
+    Route::get('/principal/dashboard', [PrincipalController::class, 'index'])->name('principal.dashboard');
+    Route::get('/principal/reportlist', [PrincipalController::class, 'reportList'])->name('principal.reportlist');
+    Route::get('/principal/fullreportcurrent', [PrincipalController::class, 'fullReportCurrent'])->name('principal.fullreportcurrent');
+    Route::get('/principal/register', [PrincipalController::class, 'create'])->name('principal.register');
+    Route::post('/principal/register', [PrincipalController::class, 'store'])->name('principal.store');
+    Route::get('/principal/search', [PrincipalController::class, 'search'])->name('principal.search');
+    Route::get('/principal/profile', [PrincipalController::class, 'profile'])->name('principal.profile');
+    Route::get('/principal/profileedit', [PrincipalController::class, 'profileEdit'])->name('principal.profileedit');
+    Route::post('/principal/profileupdate', [PrincipalController::class, 'profileUpdate'])->name('principal.profileupdate');
+
+    Route::get('/principal/transfer-application', [PrincipalController::class, 'transferApplication'])->name('principal.transfer-application');
+    Route::get('/principal/transfer-application-status', [PrincipalController::class, 'transferApplicationStatus'])->name('principal.transfer-application-status');
+
+
+
+
+
 
     Route::get('/school/search', [SchoolController::class, 'search'])->name('school.search');
     Route::get('/school/profile/{id?}', [SchoolController::class, 'profile'])->name('school.profile');

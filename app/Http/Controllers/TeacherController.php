@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\UpdateTeacherRequest;
 use App\Http\Requests\StoreTeacherFullReportRequest;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -15,20 +16,88 @@ use App\Models\UserServiceAppointmentPosition;
 use App\Models\EducationQualification;
 use App\Models\ProfessionalQualification;
 use App\Models\FamilyInfo;
+use App\Models\Position;
 
 class TeacherController extends Controller
 {
     public function index()
     {
+        $baseQuery = User::join('user_in_services', 'users.id', '=', 'user_in_services.userId')
+            ->join('user_service_appointments', 'user_service_appointments.userServiceId', '=', 'user_in_services.id')
+            ->join('user_service_appointment_positions', 'user_service_appointment_positions.userServiceAppointmentId', '=', 'user_service_appointments.id')
+            ->join('positions', 'user_service_appointment_positions.positionId', '=', 'positions.id')
+            ->join('personal_infos', 'personal_infos.userId', '=', 'users.id')
+            ->join('teacher_services', 'user_in_services.serviceId', '=', 'teacher_services.id')
+            ->join('subjects', 'teacher_services.appointmentSubjectId', '=', 'subjects.id')
+            ->where('user_in_services.active', 1)
+            ->where('user_in_services.serviceId', 1)
+            ->where('user_service_appointments.active', 1)
+            ->where('user_service_appointment_positions.current', 1)
+            ->whereNull('user_service_appointments.releasedDate')
+            ->whereNull('user_in_services.releasedDate')
+            ->where('user_service_appointments.workPlaceId', session('workPlaceId'));
+
+        // 🔹 First 5 teachers approaching retirement
+        $teachers = (clone $baseQuery)
+            ->select(
+                'users.id AS userId',
+                'users.name',
+                'users.nic',
+                'users.email',
+                'users.nameWithInitials',
+                'user_in_services.appointedDate',
+                'user_service_appointments.appointedDate AS appointmentDate',
+                'user_service_appointment_positions.positionId',
+                'personal_infos.birthday',
+                'subjects.name AS subjectName',
+                'positions.name AS positionName',
+                DB::raw('DATE_ADD(personal_infos.birthday, INTERVAL 60 YEAR) AS retirementDate')
+            )
+            ->orderBy('retirementDate', 'asc')
+            ->limit(5)
+            ->get();
+
+        // 🔹 Teacher counts
+        $totalTeachers = (clone $baseQuery)->count();
+
+        $maleTeachers = (clone $baseQuery)
+            ->where('personal_infos.genderId', 1)
+            ->count();
+
+        $femaleTeachers = (clone $baseQuery)
+            ->where('personal_infos.genderId', 2)
+            ->count();
+
+        if ($maleTeachers == 0 && $femaleTeachers == 0) {
+            $maleToFemaleRatio = "0:0"; // no teachers
+        } elseif ($femaleTeachers == 0) {
+            $maleToFemaleRatio = $maleTeachers . ":0"; // only males
+        } elseif ($maleTeachers == 0) {
+            $maleToFemaleRatio = "0:" . $femaleTeachers; // only females
+        } else {
+            // Simplify ratio using gcd
+            $gcd = function($a, $b) use (&$gcd) {
+                return $b == 0 ? $a : $gcd($b, $a % $b);
+            };
+            $divisor = $gcd($maleTeachers, $femaleTeachers);
+            $maleToFemaleRatio = ($maleTeachers / $divisor) . ":" . ($femaleTeachers / $divisor);
+        }
 
         $option = [
             'Dashboard' => route('dashboard'),
             'Teacher Dashboard' => null
         ];
 
-        //dd($teacherCounts);
-        return view('employer.teacher.dashboard',compact('option'));
+        return view('employer.teacher.dashboard', compact(
+            'option',
+            'teachers',
+            'totalTeachers',
+            'maleTeachers',
+            'femaleTeachers',
+            'maleToFemaleRatio'
+        ));
     }
+
 
     public function reportlist()
     {
@@ -66,6 +135,7 @@ class TeacherController extends Controller
 
     public function profile(Request $request)
     {
+        //dd($request->all());
         if($request->has('id')){
             try{
 
@@ -152,19 +222,15 @@ class TeacherController extends Controller
                 $currentService = $partitionedData[0]
                     ->unique('userServiceId')
                     ->map(function ($item) {
-                        $servicePeriod = "from {$item->appointedDate} to " . ($item->releasedDate ?? 'present');
                         return [
                             'userServiceId' => $item->userServiceId,
-                            'formattedService' => "{$item->serviceName} {$servicePeriod}",
+                            'serviceName' => $item->serviceName,
+                            'appointedDate' => $item->appointedDate,
                         ];
                     }); // Keep as a collection
 
                 // Extract current service IDs
                 $currentServiceIds = $currentService->pluck('userServiceId');
-
-                // If you need to convert $currentService to an array for Blade:
-                $currentServiceArray = $currentService->pluck('formattedService', 'userServiceId')->toArray();
-
 
                 $previousServices = $partitionedData[1]
                 ->unique('userServiceId')
@@ -172,29 +238,23 @@ class TeacherController extends Controller
                     $servicePeriod = "from {$item->appointedDate} to " . ($item->releasedDate ?? 'present');
                     return [
                         'userServiceId' => $item->userServiceId,
-                        'formattedService' => "{$item->serviceName} {$servicePeriod}",
+                        'serviceName' => $item->serviceName,
+                        'servicePeriod' => $servicePeriod,
                     ];
                 }); // Keep as a collection
-
+                //dd($previousServices);
                 $previousServiceIds = $previousServices->pluck('userServiceId');
-
-                // If you need to convert $previousServices to an array for Blade:
-                $previousServicesArray = $previousServices->pluck('formattedService', 'userServiceId')->toArray();
-
 
                 $currentServiceRanks = $combinedData->filter(function ($item) use ($currentServiceIds) {
                     return $currentServiceIds->contains($item->userServiceId) && !is_null($item->serviceRankId);
                 })->map(function ($item) {
-                    $rankPeriod = "from {$item->rankedDate}";
                     return [
                         'userServiceId' => $item->userServiceId,
-                        'formattedRank' => "{$item->rank} {$rankPeriod}",
+                        'rank' => $item->rank,
+                        'rankedDate' => $item->rankedDate,
                     ];
                 });
-                //dd($currentServiceRanks);
-                // Convert to an array for Blade if needed
-                $currentServiceRanksArray = $currentServiceRanks->pluck('formattedRank')->toArray();
-                //dd($currentServiceRanksArray);
+
                 $previousServiceRanks = $combinedData->filter(function ($item) use ($previousServiceIds) {
                     return $previousServiceIds->contains($item->userServiceId) && !is_null($item->serviceRankId);
                 })->map(function ($item) {
@@ -212,134 +272,82 @@ class TeacherController extends Controller
 
                 // Fetch appointments and categorize them into current and previous based on the service IDs
                 $appointments = UserServiceAppointment::join('work_places', 'user_service_appointments.workPlaceId', '=', 'work_places.id')
-                ->whereIn('user_service_appointments.userServiceId', $currentServiceIds)
-                ->orWhereIn('user_service_appointments.userServiceId', $previousServiceIds)
-                ->select(
-                    'user_service_appointments.*',
-                    'work_places.name AS workPlaceName',
-                    'work_places.censusNo AS censusNo',
-                    'work_places.categoryId AS workPlaceCategory'
-                )
-                ->get();
-
-                // Partition appointments into categories based on their attributes
-                $appointmentsPartitioned = $appointments->groupBy(function ($appointment) {
-                if (is_null($appointment->releasedDate)) {
-                    return $appointment->appointmentType == 1 ? 'currentAppointments' : 'currentAttachAppointments';
-                } elseif (!is_null($appointment->releasedDate)) {
-                    return $appointment->appointmentType == 1 ? 'previousAppointments' : 'previousAttachAppointments';
-                }
-                return null; // Ignore other cases
-                });
-
-                // Map the partitions to IDs
-                $currentAppointmentIds = $appointmentsPartitioned->get('currentAppointments', collect())->pluck('id')->toArray();
-                $previousAppointmentIds = $appointmentsPartitioned->get('previousAppointments', collect())->pluck('id')->toArray();
-                $currentAttachAppointmentIds = $appointmentsPartitioned->get('currentAttachAppointments', collect())->pluck('id')->toArray();
-                $previousAttachAppointmentIds = $appointmentsPartitioned->get('previousAttachAppointments', collect())->pluck('id')->toArray();
-
-                // Format and return results for each category
-                $currentAppointments = $appointmentsPartitioned->get('currentAppointments', collect())
-                ->map(function ($appointment) {
-                    return [
-                        'id' => $appointment->id,
-                        'formattedAppointment' => "{$appointment->workPlaceName} from {$appointment->appointedDate}",
-                    ];
-                })->pluck('formattedAppointment', 'id')->toArray();
-
-                $previousAppointments = $appointmentsPartitioned->get('previousAppointments', collect())
-                ->map(function ($appointment) {
-                    return [
-                        'id' => $appointment->id,
-                        'formattedAppointment' => "{$appointment->workPlaceName} from {$appointment->appointedDate} to {$appointment->releasedDate}",
-                    ];
-                })->pluck('formattedAppointment', 'id')->toArray();
-
-                $currentAttachAppointments = $appointmentsPartitioned->get('currentAttachAppointments', collect())
-                ->map(function ($appointment) {
-                    return [
-                        'id' => $appointment->id,
-                        'formattedAppointment' => "{$appointment->workPlaceName} from {$appointment->appointedDate}",
-                    ];
-                })->pluck('formattedAppointment', 'id')->toArray();
-
-                $previousAttachAppointments = $appointmentsPartitioned->get('previousAttachAppointments', collect())
-                ->map(function ($appointment) {
-                    return [
-                        'id' => $appointment->id,
-                        'formattedAppointment' => "{$appointment->workPlaceName} from {$appointment->appointedDate} to {$appointment->releasedDate}",
-                    ];
-                })->pluck('formattedAppointment', 'id')->toArray();
-
-
-                $positions = UserServiceAppointmentPosition::join('positions', 'user_service_appointment_positions.positionId', '=', 'positions.id')
-                    ->whereIn('user_service_appointment_positions.userServiceAppointmentId', array_merge(
-                        $currentAppointmentIds,
-                        $previousAppointmentIds,
-                        $currentAttachAppointmentIds,
-                        $previousAttachAppointmentIds
-                    ))
+                    ->whereIn('user_service_appointments.userServiceId', $currentServiceIds)
+                    ->orWhereIn('user_service_appointments.userServiceId', $previousServiceIds)
                     ->select(
-                        'user_service_appointment_positions.*',
-                        'positions.name AS position'
+                        'user_service_appointments.*',
+                        'work_places.name AS workPlaceName',
+                        'work_places.censusNo AS censusNo',
+                        'work_places.categoryId AS workPlaceCategory'
                     )
                     ->get();
 
-                // Partition positions into categories based on appointment IDs
-                $positionsPartitioned = $positions->groupBy(function ($position) use (
-                    $currentAppointmentIds,
-                    $previousAppointmentIds,
-                    $currentAttachAppointmentIds,
-                    $previousAttachAppointmentIds,
-                ) {
-                    if (in_array($position->userServiceAppointmentId, $currentAppointmentIds)) {
-                        return 'currentPositions';
-                    } elseif (in_array($position->userServiceAppointmentId, $previousAppointmentIds)) {
-                        return 'previousPositions';
-                    } elseif (in_array($position->userServiceAppointmentId, $currentAttachAppointmentIds)) {
-                        return 'currentAttachPositions';
-                    } elseif (in_array($position->userServiceAppointmentId, $previousAttachAppointmentIds)) {
-                        return 'previousAttachPositions';
-                    }
-                    return null; // Ignore other cases
-                });
+                // Categorize appointments
+                $categorizedAppointments = [
+                    'currentAppointment' => $appointments->filter(fn($a) => is_null($a->releasedDate) && $a->appointmentType == 1)
+                        ->map(fn($a) => (object) [
+                            'id' => $a->id,
+                            'workPlaceName' => $a->workPlaceName,
+                            'censusNo' => $a->censusNo,
+                            'category' => $a->workPlaceCategory,
+                            'appointedDate' => $a->appointedDate,
+                            'releasedDate' => $a->releasedDate,
+                        ])->values(),
 
-                // Map the partitions to structured data
-                $currentPositions = $positionsPartitioned->get('currentPositions', collect())
-                    ->map(function ($position) {
-                        return [
-                            'id' => $position->id,
-                            'positionName' => $position->position,
-                            'details' => $position->toArray(),
-                        ];
-                })->values();
+                    'previousAppointment' => $appointments->filter(fn($a) => !is_null($a->releasedDate) && $a->appointmentType == 1)
+                        ->map(fn($a) => (object) [
+                            'id' => $a->id,
+                            'workPlaceName' => $a->workPlaceName,
+                            'censusNo' => $a->censusNo,
+                            'category' => $a->workPlaceCategory,
+                            'appointedDate' => $a->appointedDate,
+                            'releasedDate' => $a->releasedDate,
+                        ])->values(),
 
-                $previousPositions = $positionsPartitioned->get('previousPositions', collect())
-                    ->map(function ($position) {
-                        return [
-                            'id' => $position->id,
-                            'positionName' => $position->position,
-                            'details' => $position->toArray(),
-                        ];
-                })->values();
+                    'currentAttachedAppointment' => $appointments->filter(fn($a) => is_null($a->releasedDate) && $a->appointmentType == 2)
+                        ->map(fn($a) => (object) [
+                            'id' => $a->id,
+                            'workPlaceName' => $a->workPlaceName,
+                            'censusNo' => $a->censusNo,
+                            'category' => $a->workPlaceCategory,
+                            'appointedDate' => $a->appointedDate,
+                            'releasedDate' => $a->releasedDate,
+                        ])->values(),
 
-                $currentAttachPositions = $positionsPartitioned->get('currentAttachPositions', collect())
-                    ->map(function ($position) {
-                        return [
-                            'id' => $position->id,
-                            'positionName' => $position->position,
-                            'details' => $position->toArray(),
-                        ];
-                })->values();
+                    'previousAttachedAppointment' => $appointments->filter(fn($a) => !is_null($a->releasedDate) && $a->appointmentType == 2)
+                        ->map(fn($a) => (object) [
+                            'id' => $a->id,
+                            'workPlaceName' => $a->workPlaceName,
+                            'censusNo' => $a->censusNo,
+                            'category' => $a->workPlaceCategory,
+                            'appointedDate' => $a->appointedDate,
+                            'releasedDate' => $a->releasedDate,
+                        ])->values(),
+                ];
 
-                $previousAttachPositions = $positionsPartitioned->get('previousAttachPositions', collect())
-                    ->map(function ($position) {
-                        return [
-                            'id' => $position->id,
-                            'positionName' => $position->position,
-                            'details' => $position->toArray(),
-                        ];
-                })->values();
+                // Get current appointment (only one)
+                $currentAppointment = $appointments
+                ->first(fn($a) => is_null($a->releasedDate) && $a->appointmentType == 1);
+
+                if ($currentAppointment) {
+                // Get its current position
+                $currentPosition = UserServiceAppointmentPosition::join(
+                        'positions',
+                        'user_service_appointment_positions.positionId',
+                        '=',
+                        'positions.id'
+                    )
+                    ->where('user_service_appointment_positions.userServiceAppointmentId', $currentAppointment->id)
+                    ->where('user_service_appointment_positions.current', 1)
+                    ->select('positions.name as positionName')
+                    ->first();
+
+                // Attach position to appointment object
+                $currentAppointment->position = $currentPosition->positionName ?? null;
+                }
+
+                //dd($categorizedAppointments);
+
 
 
                 $educationQualifications = EducationQualification::join('education_qualification_infos', 'education_qualification_infos.educationQualificationId', '=', 'education_qualifications.id')
@@ -363,23 +371,17 @@ class TeacherController extends Controller
                 ->select('family_infos.*')
                 ->get();
 
-                //dd($family);
+                //dd($teacher);
 
                 //dd($family);
                 return view('employer.teacher.profile', compact(
                     'teacher',
-                    'currentServiceArray',
-                    'previousServicesArray',
-                    'currentServiceRanksArray',
+                    'currentService',
+                    'previousServices',
+                    'currentServiceRanks',
                     'previousServiceRanksArray',
-                    'currentAppointments',
-                    'previousAppointments',
-                    'currentAttachAppointments',
-                    'previousAttachAppointments',
-                    'currentPositions',
-                    'previousPositions',
-                    'currentAttachPositions',
-                    'previousAttachPositions',
+                    'categorizedAppointments',
+                    'currentAppointment',
                     'educationQualifications',
                     'professionalQualifications',
                     'family',
@@ -400,6 +402,95 @@ class TeacherController extends Controller
     // {
     //     return view('employer.teacher.profile');
     // }
+    public function profileedit(Request $request)
+    {
+        if($request->has('id') && $request->has('category')){
+            try{
+
+                $decryptedId = Crypt::decryptString($request->id);
+                $category = $request->category;
+
+                $teacher = User::find($decryptedId);
+
+                if ($teacher) {
+                    $teacher->cryptedId = $request->id;
+                }
+
+                $positions = collect([]);
+                if($category == 'position')
+                {
+                    $positions = Position::where('id', '<=', 2)
+                     ->where('active', 1)
+                     ->get()->pluck('name', 'id');
+                }
+
+
+
+                return view('employer.teacher.profile-edit', compact(
+                    'teacher',
+                    'positions',
+                    'category',
+                ));
+
+
+            }catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                // Redirect to the search page or show an error message for invalid ID
+                return redirect()->route('teacher.dashboard')->with('error', 'Invalid teacher ID provided.');
+            }
+
+        }else{
+            return redirect()->route('teacher.dashboard');
+        }
+    }
+
+    public function profileupdate(UpdateTeacherRequest $request)
+    {
+        //dd($request->all());
+        $category = $request->input('category');
+        $userId   = $request->input('userId');
+
+
+        if ($category === 'position') {
+            $positionId = $request->input('position');
+            $userData = DB::table('users')
+            ->join('user_in_services as uis', 'users.id', '=', 'uis.userId')
+            ->join('user_service_appointments as usa', 'uis.id', '=', 'usa.userServiceId')
+            ->join('user_service_appointment_positions as usap', 'usa.id', '=', 'usap.userServiceAppointmentId')
+            ->where('users.id', $userId)
+            ->where('usap.current', 1)
+            ->where('usa.releasedDate', null)
+            ->where('uis.releasedDate', null)
+            ->select(
+                'users.id as userId',
+                'uis.id as userInServiceId',
+                'usa.id as userServiceAppointmentId',
+                'usap.id as userServiceAppointmentPositionId',
+                'usap.positionId'
+            )
+            ->first();
+            if ($userData) {
+                // Update the position
+                DB::table('user_service_appointment_positions')
+                    ->where('id', $userData->userServiceAppointmentPositionId)
+                    ->update(['positionId' => $positionId]);
+
+                return redirect()->back()->with('success', 'Position has been updated successfully.');
+            } else {
+                return redirect()->back()->with('error', 'No active position found for this teacher.');
+            }
+        }
+
+        if ($category === 'password') {
+            $user = User::find($userId);
+            if ($user) {
+
+
+                return redirect()->back()->with('success', 'Password chaging link has been send to email and mobile number.');
+            } else {
+                return redirect()->back()->with('error', 'User not found.');
+            }
+        }
+    }
 
     public function transferApplication()
     {
