@@ -6,6 +6,8 @@ use App\Http\Requests\StoreSchoolRequest;
 use App\Http\Requests\StoreSchoolClassListRequest;
 use App\Http\Requests\UpdateSchoolRequest;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Student;
 use App\Models\School;
 use App\Models\SchoolClassList;
 use Illuminate\Support\Facades\DB;
@@ -16,12 +18,73 @@ class SchoolController extends Controller
     public function index()
     {
 
-        $option = [
-            'Dashboard' => route('dashboard'),
-            'School Dashboard' => null
+        $userCounts = User::join('user_in_services', 'users.id', '=', 'user_in_services.userId')
+        ->join('user_service_appointments', 'user_service_appointments.userServiceId', '=', 'user_in_services.id')
+        ->join('user_service_appointment_positions', 'user_service_appointment_positions.userServiceAppointmentId', '=', 'user_service_appointments.id')
+        ->join('positions', 'user_service_appointment_positions.positionId', '=', 'positions.id')
+        ->where('user_in_services.active', 1)
+        ->where('user_service_appointments.active', 1)
+        ->where('user_service_appointment_positions.current', 1)
+        ->whereNull('user_service_appointments.releasedDate')
+        ->whereNull('user_in_services.releasedDate')
+        ->where('user_service_appointments.workPlaceId', session('workPlaceId'))
+        ->selectRaw("
+            SUM(CASE WHEN user_in_services.serviceId = 1 THEN 1 ELSE 0 END) as teacherCount,
+            SUM(CASE WHEN user_in_services.serviceId IN (3,4) THEN 1 ELSE 0 END) as principalCount,
+            SUM(CASE WHEN user_in_services.serviceId = 11 THEN 1 ELSE 0 END) as developmentOfficerCount
+        ")
+        ->first();
+
+        $studentCount = Student::join('student_schools', 'students.id', '=', 'student_schools.studentId')
+        ->where('student_schools.schoolId', session('schoolId'))
+        ->where('student_schools.active', 1)
+        ->where('students.active', 1)
+        ->whereNull('student_schools.releasedDate')
+        ->count();
+
+
+        $school = School::join('work_places', 'schools.workPlaceId', '=', 'work_places.id')
+        ->leftJoin('offices AS division', 'schools.officeId', '=', 'division.id')
+        ->leftJoin('work_places AS divisionOffice', 'division.workPlaceId', '=', 'divisionOffice.id')
+        ->leftJoin('offices AS zone', 'division.higherOfficeId', '=', 'zone.id')
+        ->leftJoin('work_places AS zoneOffice', 'zone.workPlaceId', '=', 'zoneOffice.id')
+        ->leftJoin('offices AS province', 'zone.higherOfficeId', '=', 'province.id')
+        ->leftJoin('work_places AS provinceOffice', 'province.workPlaceId', '=', 'provinceOffice.id')
+        ->leftJoin('school_ethnicities', 'schools.ethnicityId', '=', 'school_ethnicities.id')
+        ->leftJoin('school_densities', 'schools.densityId', '=', 'school_densities.id')
+        ->leftJoin('school_languages', 'schools.languageId', '=', 'school_languages.id')
+        ->leftJoin('school_facilities', 'schools.facilityId', '=', 'school_facilities.id')
+        ->leftJoin('school_classes', 'schools.classId', '=', 'school_classes.id')
+        ->leftJoin('school_genders', 'schools.genderId', '=', 'school_genders.id')
+        ->leftJoin('school_religions', 'schools.religionId', '=', 'school_religions.id')
+        ->where('schools.id', session('schoolId'))
+        ->select(
+            'work_places.name as schoolName',
+            'divisionOffice.name as divisionOfficeName',
+            'zoneOffice.name as zoneOfficeName',
+            'provinceOffice.name as provinceOfficeName',
+            'school_ethnicities.name as ethnicityName',
+            'school_densities.name as densityName',
+            'school_languages.name as languageName',
+            'school_facilities.name as facilityName',
+            'school_classes.name as className',
+            'school_genders.name as genderName',
+            'school_religions.name as religionName',
+            DB::raw("CASE
+                        WHEN schools.authorityId = 1 THEN 'National School'
+                        WHEN schools.authorityId = 2 THEN 'Provincial School'
+                        ELSE 'Other'
+                    END as schoolAuthority")
+        )
+        ->first();
+
+        $userCounts = [
+            'teacherCount' => $userCounts->teacherCount ?? 0,
+            'principalCount' => $userCounts->principalCount ?? 0,
+            'developmentOfficerCount' => $userCounts->developmentOfficerCount ?? 0,
         ];
 
-        return view('places.school.dashboard',compact('option'));
+        return view('places.school.dashboard',compact('userCounts', 'studentCount', 'school'));
     }
 
     public function search()
@@ -149,31 +212,8 @@ class SchoolController extends Controller
 
     public function classprofile($id = null)
     {
-        //dd($id);
-        if(!session('schoolId') && isset($id)){
+        $schoolId = session('schoolId');
 
-            $schoolId = $id;
-            $option = [
-                'Dashboard' => 'dashboard',
-                'School Search' => 'school.search',
-                'School Dashboard' => route('school.profile', ['id' => $schoolId]),
-                'Class Profile' => route('school.classprofile', ['id' => $schoolId]),
-            ];
-            //dd($option);
-
-        }elseif (session('schoolId') && !isset($id)) {
-
-            $schoolId = session('schoolId');
-            $option = [
-                'Dashboard' => 'dashboard',
-                'School Profile' => route('school.profile'),
-                'Class Profile' => 'school.classprofile',
-            ];
-
-        }
-        else{
-            return redirect()->route('dashboard');
-        }
         $school_detail = School::join('work_places', 'schools.workPlaceId', '=', 'work_places.id')
         ->join('offices', 'schools.officeId', '=', 'offices.id')
         ->join('work_places AS divisions', 'offices.workPlaceId', '=', 'divisions.id')
@@ -202,29 +242,13 @@ class SchoolController extends Controller
         )
         ->paginate(10);
         //dd($classes);
-
-        $chartData = [
-            ['Book Catagory', 'Amount'],
-            ["Novels", 44],
-            ["Short Story", 31],
-            ["Documantary", 12],
-            ["Children's Boos", 10],
-            ['Other', 3]
-        ];
         //dd($option);
-        return view('school/classdashboard',compact('option','classes','chartData','school_detail'));
+        return view('places.school.classdashboard',compact('classes','school_detail'));
     }
 
     public function classsetup()
     {
-
-        $option = [
-            'Dashboard' => 'dashboard',
-            'School Profile' => route('school.profile'),
-            'Class Profile' => 'school.classprofile',
-            'Class Setup' => 'school.classsetup',
-        ];
-        return view('school/classsetup',compact('option'));
+        return view('places.school.classsetup');
     }
 
     public function classstore(StoreSchoolClassListRequest $request)
@@ -313,24 +337,7 @@ class SchoolController extends Controller
         )
         ->paginate(10);
 
-
-        $chartData = [
-            ['Book Catagory', 'Amount'],
-            ["Novels", 44],
-            ["Short Story", 31],
-            ["Documantary", 12],
-            ["Children's Boos", 10],
-            ['Other', 3]
-        ];
-
-        $option = [
-            'Dashboard' => 'dashboard',
-            'School Profile' => route('school.profile'),
-            'Class Profile' => 'school.classprofile',
-        ];
-
-        //dd($card_pack_1);
-        return view('school/classdashboard',compact('option','classes','chartData','school_detail'));
+        return view('places.school.classdashboard',compact('classes','school_detail'));
 
     }
 

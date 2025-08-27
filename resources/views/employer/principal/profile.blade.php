@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-700 dark:text-gray-200 leading-tight">
-            {{ __('Teacher Profile') }}
+            {{ __('Principal Profile') }}
         </h2>
     </x-slot>
 
@@ -12,7 +12,7 @@
                     <!-- Breadcrumb -->
                     <x-breadcrumb :items="[
                         'Home' => route('dashboard'),
-                        'Teacher Dashboard' => route('teacher.dashboard'),
+                        'Principal Dashboard' => route('principal.dashboard'),
                         'Profile' => null,
                     ]" />
                 </div>
@@ -20,27 +20,27 @@
                 <div>
                     <div class="mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
                         <div class="md:flex">
-                            <!-- Teacher Image -->
+                            <!-- Principal Image -->
                             <div class="md:w-1/4 p-6 flex justify-center">
                                 <div class="relative">
                                     <img class="w-48 h-48 rounded-full object-cover border-4 border-indigo-500"
                                         src="https://images.unsplash.com/photo-1577880216142-8549e9488dad?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
-                                        alt="Teacher profile picture" />
+                                        alt="Principal profile picture" />
                                 </div>
                             </div>
 
-                            <!-- Teacher Info -->
+                            <!-- Principal Info -->
                             <div class="md:w-3/4 p-6">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ $teacher->nameWithInitials.' ['.$teacher->nic.']' }}
+                                        <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">{{ $principal->nameWithInitials.' ['.$principal->nic.']' }}
                                         </h1>
                                         <p class="text-indigo-600 dark:text-indigo-400 font-semibold">Position: {{ $currentAppointment->position }}</p>
                                         </p>
                                     </div>
                                     <div class="flex space-x-2">
-                                        <a href="{{ route('teacher.profileedit', [
-                                                'id' => $teacher->cryptedId,
+                                        <a href="{{ route('principal.profileedit', [
+                                                'id' => $principal->cryptedId,
                                                 'category' => 'position'
                                             ]) }}"
                                         class="bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 p-2 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800 inline-flex items-center justify-center">
@@ -57,37 +57,37 @@
                                 <div class="mt-4">
                                     <div class="flex items-center text-gray-600 dark:text-gray-300 mb-2 gap-2">
                                         <i data-lucide="user"></i>
-                                        <span>Full Name: {{ $teacher->name }}</span>
+                                        <span>Full Name: {{ $principal->name }}</span>
                                     </div>
                                     <div class="flex items-center text-gray-600 dark:text-gray-300 mb-2 gap-2">
                                         <i data-lucide="calendar-days"></i>
-                                        <span>Date of Birth: {{ \Carbon\Carbon::parse($teacher->birthDay)->format('F j, Y') }}</span>
+                                        <span>Date of Birth: {{ \Carbon\Carbon::parse($principal->birthDay)->format('F j, Y') }}</span>
                                     </div>
                                     <div class="flex items-center text-gray-600 dark:text-gray-300 mb-4 gap-2">
                                         <i data-lucide="map-pin"></i>
                                         <span>Permanent Address:
-                                            {{ $teacher->permAddressLine1 }},
-                                            {{ $teacher->permAddressLine2 }},
-                                            {{ $teacher->permAddressLine3 }},
+                                            {{ $principal->permAddressLine1 }},
+                                            {{ $principal->permAddressLine2 }},
+                                            {{ $principal->permAddressLine3 }},
                                         </span>
 
                                     </div>
                                     <div class="flex items-center text-gray-600 dark:text-gray-300 mb-4 gap-2">
                                         <i data-lucide="map-pin"></i>
                                         <span>Residential Address:
-                                            {{ $teacher->tempAddressLine1 }},
-                                            {{ $teacher->tempAddressLine2 }},
-                                            {{ $teacher->tempAddressLine3 }},
+                                            {{ $principal->tempAddressLine1 }},
+                                            {{ $principal->tempAddressLine2 }},
+                                            {{ $principal->tempAddressLine3 }},
                                         </span>
 
                                     </div>
                                     <div class="flex items-center text-gray-600 dark:text-gray-300 mb-4 gap-2">
                                         <i data-lucide="mail"></i>
-                                        <span>Email: {{ $teacher->email }}</span>
+                                        <span>Email: {{ $principal->email }}</span>
                                     </div>
                                     <div class="flex items-center text-gray-600 dark:text-gray-300 mb-4 gap-2">
                                         <i data-lucide="phone-call"></i>
-                                        <span>Contact: {{ $teacher->mobile1 }} / WhatsApp: {{ $teacher->mobile2 }}</span>
+                                        <span>Contact: {{ $principal->mobile1 }} / WhatsApp: {{ $principal->mobile2 }}</span>
                                     </div>
 
                                 </div>
@@ -115,7 +115,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Race</h4>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $teacher->race }}</p>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $principal->race }}</p>
                                             </div>
                                         </li>
                                         <li class="flex items-start">
@@ -125,7 +125,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Religion</h4>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $teacher->religion }}</p>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $principal->religion }}</p>
                                             </div>
                                         </li>
                                         <li class="flex items-start">
@@ -135,7 +135,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Civil Status</h4>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $teacher->civilStatus }}</p>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $principal->civilStatus }}</p>
                                             </div>
                                         </li>
                                         <li class="flex items-start">
@@ -145,7 +145,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Gender</h4>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $teacher->gender }}</p>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $principal->gender }}</p>
                                             </div>
                                         </li>
                                     </ul>
@@ -161,9 +161,9 @@
                                     <ul class="space-y-3">
                                         <li class="flex items-start">
                                             <div class="p-2 rounded-full mr-3
-                                                {{ $teacher->province ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
+                                                {{ $principal->province ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
 
-                                                @if($teacher->province)
+                                                @if($principal->province)
                                                     <i data-lucide="check" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
                                                 @else
                                                     <i data-lucide="x" class="text-red-600 dark:text-red-300 text-xs"></i>
@@ -173,16 +173,16 @@
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Province</h4>
                                                 <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                                    {{ $teacher->province ?? 'Not Available' }}
+                                                    {{ $principal->province ?? 'Not Available' }}
                                                 </p>
                                             </div>
                                         </li>
 
                                         <li class="flex items-start">
                                             <div class="p-2 rounded-full mr-3
-                                                {{ $teacher->district ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
+                                                {{ $principal->district ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
 
-                                                @if($teacher->district)
+                                                @if($principal->district)
                                                     <i data-lucide="check" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
                                                 @else
                                                     <i data-lucide="x" class="text-red-600 dark:text-red-300 text-xs"></i>
@@ -192,16 +192,16 @@
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">District</h4>
                                                 <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                                    {{ $teacher->district ?? 'Not Available' }}
+                                                    {{ $principal->district ?? 'Not Available' }}
                                                 </p>
                                             </div>
                                         </li>
 
                                         <li class="flex items-start">
                                             <div class="p-2 rounded-full mr-3
-                                                {{ $teacher->dsDivision ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
+                                                {{ $principal->dsDivision ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
 
-                                                @if($teacher->dsDivision)
+                                                @if($principal->dsDivision)
                                                     <i data-lucide="check" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
                                                 @else
                                                     <i data-lucide="x" class="text-red-600 dark:text-red-300 text-xs"></i>
@@ -211,16 +211,16 @@
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">DS Division</h4>
                                                 <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                                    {{ $teacher->dsDivision ?? 'Not Available' }}
+                                                    {{ $principal->dsDivision ?? 'Not Available' }}
                                                 </p>
                                             </div>
                                         </li>
 
                                         <li class="flex items-start">
                                             <div class="p-2 rounded-full mr-3
-                                                {{ $teacher->gnDivision ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
+                                                {{ $principal->gnDivision ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
 
-                                                @if($teacher->gnDivision)
+                                                @if($principal->gnDivision)
                                                     <i data-lucide="check" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
                                                 @else
                                                     <i data-lucide="x" class="text-red-600 dark:text-red-300 text-xs"></i>
@@ -230,16 +230,16 @@
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">GN Division</h4>
                                                 <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                                    {{ $teacher->gnDivision ?? 'Not Available' }}
+                                                    {{ $principal->gnDivision ?? 'Not Available' }}
                                                 </p>
                                             </div>
                                         </li>
 
                                         <li class="flex items-start">
                                             <div class="p-2 rounded-full mr-3
-                                                {{ $teacher->educationDivision ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
+                                                {{ $principal->educationDivision ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-red-100 dark:bg-red-900' }}">
 
-                                                @if($teacher->educationDivision)
+                                                @if($principal->educationDivision)
                                                     <i data-lucide="check" class="text-indigo-600 dark:text-indigo-300 text-xs"></i>
                                                 @else
                                                     <i data-lucide="x" class="text-red-600 dark:text-red-300 text-xs"></i>
@@ -249,7 +249,7 @@
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Res. Education  Division</h4>
                                                 <p class="text-gray-600 dark:text-gray-400 text-sm">
-                                                    {{ $teacher->educationDivision ?? 'Not Available' }}
+                                                    {{ $principal->educationDivision ?? 'Not Available' }}
                                                 </p>
                                             </div>
                                         </li>
@@ -279,7 +279,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Race</h4>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $teacher->race }}</p>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $principal->race }}</p>
                                             </div>
                                         </li>
                                         <li class="flex items-start">
@@ -289,7 +289,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Religion</h4>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $teacher->religion }}</p>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $principal->religion }}</p>
                                             </div>
                                         </li>
                                         <li class="flex items-start">
@@ -299,7 +299,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Civil Status</h4>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $teacher->civilStatus }}</p>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $principal->civilStatus }}</p>
                                             </div>
                                         </li>
                                         <li class="flex items-start">
@@ -309,7 +309,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-medium text-gray-800 dark:text-gray-100">Gender</h4>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $teacher->gender }}</p>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">{{ $principal->gender }}</p>
                                             </div>
                                         </li>
                                     </ul>
@@ -637,8 +637,8 @@
                         <!-- Contact Button -->
                         <div class="mt-8 border-t border-gray-200 dark:border-gray-700">
                             <div class="flex justify-end items-center p-6">
-                                <a href="{{ route('teacher.profileedit', [
-                                    'id' => $teacher->cryptedId,
+                                <a href="{{ route('principal.profileedit', [
+                                    'id' => $principal->cryptedId,
                                     'category' => 'password'
                                     ]) }}"
                                     class="bg-red-600 hover:bg-red-700 text-white dark:text-gray-100 font-bold py-3 px-8 rounded-full transition duration-300 inline-block text-center">

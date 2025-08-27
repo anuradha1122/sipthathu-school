@@ -62,12 +62,12 @@ class TeacherFullReport extends Component
     }
 
     public function getResultsProperty()
-{
-    if (!$this->showResults) {
-        return collect();
-    }
+    {
+        if (!$this->showResults) {
+            return collect();
+        }
 
-    $results = DB::table('users')
+        $results = DB::table('users')
         ->join('personal_infos', function ($join) {
             $join->on('users.id', '=', 'personal_infos.userId')
                  ->where('personal_infos.active', 1);

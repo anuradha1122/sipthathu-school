@@ -11,6 +11,7 @@ use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\PrincipalController;
+use App\Http\Controllers\SleasController;
 use App\Http\Controllers\SchoolController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,8 +34,8 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('/teacher/transfer-application', [TeacherController::class, 'transferApplication'])->name('teacher.transfer-application');
-    Route::get('/teacher/transfer-application-status', [TeacherController::class, 'transferApplicationStatus'])->name('teacher.transfer-application-status');
+    // Route::get('/teacher/transfer-application', [TeacherController::class, 'transferApplication'])->name('teacher.transfer-application');
+    // Route::get('/teacher/transfer-application-status', [TeacherController::class, 'transferApplicationStatus'])->name('teacher.transfer-application-status');
 
     /* Teacher Section */
     Route::get('/teacher/dashboard', [TeacherController::class, 'index'])->name('teacher.dashboard');
@@ -65,9 +66,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/principal/transfer-application', [PrincipalController::class, 'transferApplication'])->name('principal.transfer-application');
     Route::get('/principal/transfer-application-status', [PrincipalController::class, 'transferApplicationStatus'])->name('principal.transfer-application-status');
 
+    /*sleas Section */
+    Route::get('/sleas/dashboard', [SleasController::class, 'index'])->name('sleas.dashboard');
+    Route::get('/sleas/reportlist', [SleasController::class, 'reportList'])->name('sleas.reportlist');
+    Route::get('/sleas/fullreportcurrent', [SleasController::class, 'fullReportCurrent'])->name('sleas.fullreportcurrent');
+    Route::get('/sleas/register', [SleasController::class, 'create'])->name('sleas.register');
+    Route::post('/sleas/register', [SleasController::class, 'store'])->name('sleas.store');
+    Route::get('/sleas/search', [SleasController::class, 'search'])->name('sleas.search');
+    Route::get('/sleas/profile', [SleasController::class, 'profile'])->name('sleas.profile');
+    Route::get('/sleas/profileedit', [SleasController::class, 'profileEdit'])->name('sleas.profileedit');
+    Route::post('/sleas/profileupdate', [SleasController::class, 'profileUpdate'])->name('sleas.profileupdate');
 
-
-
+    Route::get('/sleas/transfer-application', [SleasController::class, 'transferApplication'])->name('sleas.transfer-application');
+    Route::get('/sleas/transfer-application-status', [SleasController::class, 'transferApplicationStatus'])->name('sleas.transfer-application-status');
 
 
     Route::get('/school/search', [SchoolController::class, 'search'])->name('school.search');
