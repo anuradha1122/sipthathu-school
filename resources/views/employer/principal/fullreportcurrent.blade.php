@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-700 dark:text-gray-200 leading-tight">
-            {{ __('Teacher Full Report') }}
+            {{ __('Principal Full Report') }}
         </h2>
     </x-slot>
 
@@ -13,12 +13,12 @@
                     <!-- Breadcrumb -->
                     <x-breadcrumb :items="[
                         'Home' => route('dashboard'),
-                        'Teacher Dashboard' => route('teacher.dashboard'),
-                        'Teacher Report List' => route('teacher.reportlist'),
-                        'Teacher Full Report' => null
+                        'Principal Dashboard' => route('principal.dashboard'),
+                        'Principal Report List' => route('principal.reportlist'),
+                        'Principal Full Report' => null
                     ]" />
                 </div>
-                @livewire('teacherFullReport')
+                @livewire('principalFullReport')
             </main>
         </div>
     </div>

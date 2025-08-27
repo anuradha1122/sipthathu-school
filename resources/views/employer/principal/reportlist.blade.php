@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-700 dark:text-gray-200 leading-tight">
-            {{ __('Teacher Report List') }}
+            {{ __('principal Report List') }}
         </h2>
     </x-slot>
 
@@ -13,8 +13,8 @@
                     <!-- Breadcrumb -->
                     <x-breadcrumb :items="[
                         'Home' => route('dashboard'),
-                        'Teacher Dashboard' => route('teacher.dashboard'),
-                        'Teacher Report List' => null,
+                        'Principal Dashboard' => route('principal.dashboard'),
+                        'Principal Report List' => null,
                     ]" />
                 </div>
                 <div class="bg-white rounded-xl shadow-md overflow-hidden w-full">
@@ -29,10 +29,10 @@
                         <div class="bg-white w-full shadow-sm border border-gray-200 rounded-lg p-1">
                             <ul class="space-y-1">
                                 <li class="p-2 rounded-md bg-gray-100 duration-300 flex items-center gap-2">
-                                    <a href="{{ route('teacher.fullreportcurrent') }}" class="w-full gap-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1">
+                                    <a href="{{ route('principal.fullreportcurrent') }}" class="w-full gap-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1">
                                         <div class="mx-2">
-                                            <span class="font-medium block">Teacher Full Report</span>
-                                            <span class="text-gray-600 text-sm">This will allow you to get fully customize report about your school teachers</span>
+                                            <span class="font-medium block">Principal Full Report</span>
+                                            <span class="text-gray-600 text-sm">This will allow you to get fully customize report about your school principals</span>
                                         </div>
                                     </a>
                                 </li>

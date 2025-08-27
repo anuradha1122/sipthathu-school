@@ -23,12 +23,13 @@
             <span>SLPS</span>
         </x-nav-link-left>
 
+        <x-nav-link-left :href="route('sleas.dashboard')" :active="request()->routeIs('sleas.dashboard')" class="w-full ">
+            <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+            <span>SLEAS</span>
+        </x-nav-link-left>
+
         <x-nav-link-left :href="route('school.dashboard')" :active="request()->routeIs('school.dashboard')" class="w-full ">
             <i data-lucide="home" class="w-5 h-5"></i>
-            <span>School</span>
-        </x-nav-link-left>
-        <x-nav-link-left :href="route('school.dashboard')" :active="request()->routeIs('school.dashboard')" class="w-full ">
-            <i data-lucide="building" class="w-5 h-5"></i>
             <span>School</span>
         </x-nav-link-left>
 
